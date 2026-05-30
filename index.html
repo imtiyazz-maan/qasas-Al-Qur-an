@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>امتياز - قصص القرآن</title>
+    <style>
+        :root { 
+            --primary: #1e4d2b; --accent: #c5a059; --success: #27ae60; --light: #fdfdfd;
+            --bg-body: #f0f2f0; --bg-container: #ffffff; --text-main: #333333;
+            --input-bg: #ffffff; --input-border: #eeeeee;
+        }
+        body.dark-mode {
+            --bg-body: #121212; --bg-container: #1e1e1e; --text-main: #e0e0e0;
+            --input-bg: #2d2d2d; --input-border: #444444; --primary: #7ee2a8;
+            --accent: #d8b36a;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-body); 
+            color: var(--text-main); margin: 0; padding: 20px; display: flex; flex-direction: column; align-items: center; transition: 0.3s; 
+        }
+        .container { 
+            background: var(--bg-container); width: 100%; max-width: 700px; padding: 30px; border-radius: 20px; 
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1); margin-bottom: 20px; border-top: 5px solid var(--accent); position: relative; 
+            display: flex; flex-direction: column;
+        }
+
+        .header-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 25px;
+            width: 100%;
+        }
+        
+        .lang-dropdown {
+            position: absolute;
+            top: 15px;
+            left: 15px;
+            display: inline-block;
+            z-index: 100;
+        }
+        
+        .theme-toggle-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--bg-container);
+            color: var(--text-main);
+            padding: 6px 10px;
+            font-size: 0.8rem;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 100;
+        }
+
+        .dropbtn {
+            background: var(--bg-container);
+            color: var(--text-main);
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            border: 1px solid var(--accent);
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            left: 0;
+            background-color: var(--bg-container);
+            min-width: 90px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            border-radius: 5px;
+            border: 1px solid var(--input-border);
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .dropdown-content button {
+            color: var(--text-main);
+            padding: 8px 12px;
+            display: block;
+            background: none;
+            border: none;
+            width: 100%;
+            text-align: center;
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .dropdown-content button:hover {
+            background-color: rgba(197, 160, 89, 0.2);
+        }
+        .show { display: block; }
+
+        .brand { text-align: center; }
+        .brand h1 { color: var(--primary); margin: 0; font-size: 2.2rem; }
+        
+        input, select { width: 100%; padding: 12px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-main); border-radius: 10px; box-sizing: border-box; font-family: inherit; margin-bottom: 10px; }
+        .btn { width: 100%; padding: 16px; border: none; border-radius: 10px; cursor: pointer; font-weight: bold; font-size: 1rem; margin-top: 10px; transition: 0.3s; }
+        .btn-start { background: #2c3e50; color: white; }
+        .btn-reveal { background: var(--accent); color: white; }
+        .btn-correct { background: var(--success); color: white; }
+        .btn-wrong { background: #e74c3c; color: white; }
+        
+        #timer-container { width: 100%; height: 10px; background: #eee; border-radius: 5px; margin-bottom: 15px; overflow: hidden; display: none; }
+        #timer-bar { width: 100%; height: 100%; background: var(--accent); transition: width 1s linear; }
+
+        .settings-box { background: rgba(0,0,0,0.05); padding: 15px; border-radius: 15px; margin: 15px 0; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; justify-content: center; }
+        
+        .switch-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            cursor: pointer;
+        }
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #ccc;
+            transition: .3s;
+            border-radius: 24px;
+        }
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px; width: 18px;
+            left: 3px; bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+        input:checked + .slider {
+            background-color: var(--success);
+        }
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+        body[lang="ar"] input:checked + .slider:before {
+            transform: translateX(-20px);
+        }
+        body[lang="ar"] .slider:before {
+            left: auto;
+            right: 3px;
+        }
+
+        #quiz-section, #result-section { display: none; text-align: center; }
+        .answer-box { background: rgba(197, 160, 89, 0.1); border-right: 6px solid var(--accent); padding: 20px; margin-top: 20px; display: none; text-align: right; border-radius: 10px; }
+        .eval-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 15px; }
+        
+        body[lang="id"], body[lang="en"] { direction: ltr; text-align: left; }
+        body[lang="ar"] { direction: rtl; text-align: right; }
+        body[lang="id"] .answer-box, body[lang="en"] .answer-box {
+            border-right: none;
+            border-left: 6px solid var(--accent);
+            text-align: left;
+        }
+
+        body.dark-mode .settings-box {
+            background: rgba(255,255,255,0.05);
+        }
+
+        body.dark-mode .answer-box {
+            background: rgba(216, 179, 106, 0.12);
+        }
+
+        body.dark-mode #q-text,
+        body.dark-mode #display-maddah-name,
+        body.dark-mode .brand h1,
+        body.dark-mode .answer-box,
+        body.dark-mode .answer-box p,
+        body.dark-mode .answer-box strong {
+            color: #ffffff !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body lang="ar">
+
+<div id="setup-section" class="container">
+    <div class="header-wrapper">
+        <div class="lang-dropdown">
+            <button onclick="toggleLangMenu()" class="dropbtn" id="current-lang-btn">🌐 AR</button>
+            <div id="langDropdown" class="dropdown-content">
+                <button onclick="changeLang('id')">ID</button>
+                <button onclick="changeLang('en')">EN</button>
+                <button onclick="changeLang('ar')">AR</button>
+            </div>
+        </div>
+        
+        <button class="theme-toggle-btn" id="dark-toggle" onclick="toggleDarkMode()">🌙</button>
+
+        <div class="brand">
+            <h1 id="txt-title">امتياز</h1>
+            <p id="txt-subtitle">Platform Murojaah Mandiri</p>
+        </div>
+    </div>
+    
+    <div style="text-align: center; background: rgba(197, 160, 89, 0.05); padding: 20px; border-radius: 15px; margin-bottom: 15px;">
+        <span id="txt-fixed-label" style="font-size: 0.9rem; opacity: 0.7;">المادة الحالية / Maddah:</span>
+        <h2 id="display-maddah-name" style="margin: 5px 0 0 0; color: var(--primary); font-size: 1.6rem;">...</h2>
+    </div>
+    
+    <div class="settings-box">
+        <div class="switch-container" onclick="document.getElementById('timer-toggle').click();">
+            <span id="txt-timer-on" style="font-weight: bold;">تفعيل المؤقت</span>
+            <label class="switch" onclick="event.stopPropagation();">
+                <input type="checkbox" id="timer-toggle" checked>
+                <span class="slider"></span>
+            </label>
+        </div>
+        <div style="display: flex; align-items: center; gap: 10px;">
+            <span id="txt-timer-sec">المدة (ثانية):</span>
+            <input type="number" id="timer-duration" value="30" min="5" style="width: 70px; margin: 0; padding: 5px;">
+        </div>
+    </div>
+
+    <div style="text-align: center;">
+        <p id="count-info" style="font-weight: bold; font-size: 1.1rem; margin-bottom: 15px;">...</p>
+        <button id="start-btn" class="btn btn-start" onclick="startQuiz()">ابدأ التدريب</button>
+    </div>
+</div>
+
+<div id="quiz-section" class="container">
+    <div id="timer-container"><div id="timer-bar"></div></div>
+    <p id="progress"></p>
+    <h2 id="q-text" style="line-height: 1.6; min-height: 60px; color: var(--primary);"></h2>
+    <button id="reveal-btn" class="btn btn-reveal" onclick="revealAnswer()">إظهار الإجابة</button>
+    <div id="answer-container" class="answer-box"><strong id="txt-label-ans">الإجابة الشارحة:</strong><p id="a-text" style="font-size: 1.1rem; margin-top: 10px; line-height: 1.6; white-space: pre-line;"></p></div>
+    <div id="eval-section" class="eval-btns" style="with:none;">
+        <button class="btn btn-wrong" id="txt-btn-wrong" onclick="processResult(false)">نسيت</button>
+        <button class="btn btn-correct" id="txt-btn-correct" onclick="processResult(true)">حفظت</button>
+    </div>
+</div>
+
+<div id="result-section" class="container">
+    <h2 id="txt-res-title">النتيجة النهائية</h2>
+    <p id="score-text" style="font-size: 3rem; font-weight: bold; color: var(--primary);"></p>
+    <button class="btn btn-start" id="txt-btn-restart" onclick="location.reload()">العودة</button>
+</div>
+
+<script>
+    const NAMA_MADDAH = "قصص القرآن";
+
+    const DAFTAR_SOAL = [
+  {
+    q: "تعريف القصة لغة واصطلاحا ؟",
+    a: "القصة لغة: التتبع للأثر، أو النقل للخبر.\n\nالقصة اصطلاحاً لها تعريفان:\n١. سرد لحوادث واقعية أو مصطنعة بأسلوب جذاب، الهدف منه بيان المثل الأخلاقية، أو الإصلاح الاجتماعي.\n٢. سرد مشوق ذو غاية لأحداث وأعمال يقوم بها أشخاص معينون في بيئة معينة."
+  },
+  {
+    q: "تعريف القصة القرآنية مع إبراز عناصرها ؟",
+    a: "القصة القرآنية هي أسلوب تربوي من أساليب الإسلام يحمل بين طياته وجوانبه العظة والعبرة بما فيه من تبشير وتحذير ووعد ووعيد وأمر ونهي.\n\nعناصرها أو خصائصها:\n- الإيجاز المعجز.\n- التركيز على بيان عقيدة التوحيد والبرهان عليها.\n- مشتملة على المعجزات والخوارق.\n- مواردها من عيون الحقيقة."
+  },
+  {
+    q: "التكرار في القصص القرآني وفوائده ؟",
+    a: "تكرار القصص في القرآن كقصة إبليس في السجود لآدم وقصة موسى وغيره من الأنبياء، وذكر الله موسى في مائة وعشرين موضعا من كتابه.\n\nفوائده:\n- فيه شيء زائد صفة زائدة.\n- اشتراك الجميع في القصة فيكون فيه إفادة القوم وزيادة تأكيد وتبصرة لآخرين وهم الحاضرون.\n- التسلية لقلب النبي صلى الله عليه وسلم مما اتفق للأنبياء مثله مع أممهم.\n- إبراز الكلام الواحد في فنون كثيرة وأساليب مختلفة لا يخفى ما فيه من الفصاحة.\n- الدواعي لا تتوفر على نقل القصة كتوفرها على نقل الأحكام.\n- الإعلام بأن القوم عاجزون عن الإتيان بمثل القرآن الكريم."
+  },
+  {
+    q: "أهداف القصص القرآني ؟",
+    a: "من أهم أهداف القصة:\n- إثبات الوحي والرسالة.\n- الدين كله من عند الله، والمؤمنون كلهم أمة واحدة، والله الواحد رب الجميع.\n- الدين كله من إله واحد.\n- نصر الله أنبياءه في النهاية وإهلاكه المكذبين."
+  },
+  {
+    q: "إلقاء الضوء على القصص القرآني وإبراز عظمته ؟",
+    a: "القصص القرآني قصص واقعي مصفى من كل شائبات الخيال، ملائم لتلك البيئة التي نزل فيها، ملائم للحياة كلها في أزمنتها وأمكنتها، وموارده كلها من عيون الحقيقة وينابيعها الصافية، التي لا تتغير على الزمن ولا تنزل عن مكانها من العقول."
+  },
+  {
+    q: "أثر القصص القرآني في التربية والسلوك ؟",
+    a: "يتجلى أثر القصص القرآني في نقاط عديدة:\n- غرس عقيدة التوحيد في نفوس السامعين، والتحذير من خطورة الشرك وسوء عاقبته، وبيان أهمية الإيمان وحسن عاقبة المؤمنين.\n- غرس القيم الأخلاقية العديدة الجليلة كالصبر والتواضع والنهي عن الاختيال.\n- بيان أهمية حقوق الوالدين على الأبناء بصور واقعية كسيدنا إسماعيل عليه السلام واستجابته لأبيه في تنفيذ رؤياه.\n- إبراز الآداب التي ينبغي على الفرد الالتزام بها كأدب الحوار كقصة سيدنا إبراهيم مع أبيه في دعوته له بالإيمان.\n- التحذير من غواية الشيطان كقصة سيدنا آدم عليه السلام.\n- تصوير العلاقات الإنسانية كقصة قابيل وهابيل وقصة يوسف عليه السلام مع إخوته."
+  },
+  {
+    q: "إعطاء نبذة مختصرة عن بعثة نوح عليه السلام إلى قومه ؟",
+    a: "كان قوم نوح يعبدون الأصنام، فأرسل الله إليهم نوحاً عليه السلام ليدلهم على طريق الرشاد ويعرفهم بمعبودهم الحق الذي يأخذ بأيديهم إلى جنات النعيم."
+  },
+  {
+    q: "ما السر في أن الأنبياء يختارون من أعلى القبائل حسبا ونسبا ؟",
+    a: "لأجل أن يكون للرسول أسرة ذات شوكة ومنعة تحميه من أذى الكفار حتى يبلغ رسالة ربه ويتم مراد الله من إكمال دينه."
+  },
+  {
+    q: "لماذا بدأت قصة نوح عليه السلام بالقسم ؟",
+    a: "لتأكيد خبرها لأول من وجه إليهم الخطاب."
+  },
+  {
+    q: "ما الذي اشتملت عليه دعوة نوح عليه السلام لقومه ؟",
+    a: "اشتملت على مجموعة من إرشادات وعظات في إفراد العبادة لله وحده."
+  },
+  {
+    q: "بماذا يخاطب نوح عليه السلام قومه عند الدعوة؟",
+    a: "بالتلطف والأدب."
+  },
+  {
+    q: "أي الكلمة التي سيوجهها كل رسول إلى قومه لعبادة الله وحده لا شريك له ؟",
+    a: "«اعْبُدُوا اللَّهَ مَا لَكُمْ مِنْ إِلَهِ غَيْرُهُ»."
+  },
+  {
+    q: "ما معنى قوله تعالى \"إِنِّي أَخَافُ عَلَيْكُمْ عَذَابَ يَوْمٍ عَظِيمٍ\"؟ وما المراد باليوم العظيم؟ ولماذا وصف اليوم بالعظم ؟",
+    a: "المعنى: إني أخاف عليكم إذا ما كذبتم واخترتم طريق الكفر والضلال وتركتم عبادة الله وحده عذاب يوم عظيم.\n\nالمراد باليوم العظيم: إما يوم القيامة، أو يوم نزول العذاب عليهم وهو الطوفان.\n\nالعلة (سبب الوصف بالعظم): لبيان عظم ما يقع فيه."
+  },
+  {
+    q: "بماذا رد قوم نوح على دعوته ؟",
+    a: "«إِنَّا لَنَرَاكَ فِي ضَلَالٍ مُبِينٍ»."
+  },
+  {
+    q: "ماذا يدل عليه قوله تعالى عن هؤلاء الملأ \"إِنَّا لَنَرَاكَ فِي ضَلَالٍ مُبِينٍ\" ؟",
+    a: "يدل على انحطاط خلقهم وانطماس بصيرتهم."
+  },
+  {
+    q: "بماذا أجابهم سيدنا نوح عليه السلام ؟",
+    a: "أجابهم بأسلوب مهذب: «يَا قَوْمِ لَيْسَ بِي ضَلَالَةٌ وَلَكِنِّي رَسُوْلٌ مِنْ رَبِّ الْعَالَمِينَ»."
+  },
+  {
+    q: "لماذا جاء Tلتعبير على لسان نوح عليه السلام بقوله \"لَيْسَ بِي ضَلَالَةٌ\" دون قوله \"ضلال\" ؟",
+    a: "لأن التاء في (الضلالة) للمرة الواحدة؛ فنفى عن نفسه أدنى مراتب الضلال أو أن يكون قد التبس عليه الأمر ولو لمرة واحدة."
+  },
+  {
+    q: "ما الصفات التي وصف بها نوح نفسه بعد أن نفى عنه الضلالة؟",
+    a: "- «وَلَكِنِّي رَسُولٌ مِنْ رَبِّ الْعَالَمِينَ»\n- «أُبَلِّغُكُمْ رِسَالَاتِ رَبِّي»\n- «وَأَنْصَحُ لَكُمْ»\n- «وَأَعْلَمُ مِنَ اللَّهِ مَا لَا تَعْلَمُوْنَ»"
+  },
+  {
+    q: "لماذا وردت \"رِسَالَات\" في قول نوح عليه السلام بالجمع دون الإفراد ؟",
+    a: "رعاية لاختلاف أوقاتها أو تنوع معاني ما أرسل به عليه السلام من العبادات والمعاملات."
+  },
+  {
+    q: "ما معنى قوله تعالى \"وَأَعْلَمُ مِنَ اللَّهِ مَا لَا تَعْلَمُوْنَ\" ؟",
+    a: "وأعلم من الأمور الغيبية التي لا تعلم إلا عن طريق الوحي أشياء لا علم لكم بها."
+  },
+  {
+    q: "وضح ما السبب في رفض قوم نوح عليه السلام دعوته من خلال القرآن؟",
+    a: "استبعادهم أن يرسل الله بشراً، ففي وجهة نظرهم لو أراد الله أن يرسل رسولاً لا بد أن يكون من الملائكة؛ كما قال تعالى: «مَا هَذَا إِلَّا بَشَرٌ مِثْلُكُمْ يُرِيدُ أَنْ يَتَفَضَّلَ عَلَيْكُمْ وَلَوْ شَاءَ اللَّهُ لَأَنْزَلَ مَلَائِكَةً»."
+  },
+  {
+    q: "ما الغرض الذي بينه نوح عليه السلام من بعثته ؟",
+    a: "- «لِيُنْذِرَكُمْ» (الإنذار).\n- «وَلِتَتَّقُوا» (حصول أمر التقوى).\n- «وَلَعَلَّكُمْ تُرْحَمُوْنَ» (حصول الرحمة لهم)."
+  },
+  {
+    q: "اذكر العبر المستفادة من قصة نوح مع قومه ؟",
+    a: "- أن نوحاً عليه السلام كان من أولي العزم من الرسل.\n- الملأ والسادة والوجهاء دائماً يعارضون الدعوة ويكفرون بالرسالة.\n- الدعاة إلى الله من الرسل يبذلون جهدهم ويتفننون في دعوتهم إلى الله، ولا يريدون من المدعوين شيئاً من الحياة الدنيا.\n- العاقبة الطيبة للمؤمنين، والنصر والظفر لعباد الله المرسلين.\n- الصلة والرحمة التي تربط الداعي والدعاة وتقوّي الصلة بينهم هي صلة الإسلام والإيمان."
+  },
+  {
+    q: "سيدنا هود عليه السلام من أي قبيلة ؟",
+    a: "ينتمي سيدنا هود عليه السلام إلى قبيلة عاد، ونسبه يعود إلى: عاد بن عوص بن سام بن نوح عليه السلام[cite: 125, 126]."
+  },
+  {
+    q: "كيف حالة قوم عاد الدينية ؟",
+    a: "كانوا عرباً جفاةً كافرين، عتاةً متمردين متوغلين في غياهب الشرك وعبادة الأصنام[cite: 127, 128]."
+  },
+  {
+    q: "اذكر رأي الأستاذ عبد الوهاب النجار عن قوم عاد ؟",
+    a: "يرى الأستاذ عبد الوهاب النجار إن عاداً تميزت بخصوصية تاريخية في الكتب المقدسة؛ حيث لم تُذكر في أي كتاب من الكتب المقدسة سوى القرآن الكريم[cite: 129, 130]."
+  },
+  {
+    q: "ماذا ذكر القرآن القرآن الكريم عن قصة قوم هود عليه السلام (عاد)؟",
+    a: "ذكر القرآن الكريم تفاصيل وافية وشاملة عنهم تشمل:\n- مساكنهم وأحوالهم وما كانوا ناعمين فيه من رغد العيش [cite: 131, 132].\n- ما استمسكوا به من الكفر والأوثان، وعتوهم وفسادهم الكبير في الأرض [cite: 132].\n- الجهود والجهاد الذي بذله هود عليه السلام في سبيل هدايتهم ودعوتهم [cite: 132].\n- طبيعة المقابلة الجاحدة من قومه وما واجهوه به من السخرية والاستهزاء[cite: 133]."
+  },
+  {
+    q: "ما معنى وَإِلَى عَادٍ أَخَاهُمْ هُودًا؟",
+    a: "المعنى: وأرسلنا إلى قبيلة عاد أخاهم في النسب والقرابة هوداً عليه السلام[cite: 134, 135]."
+  },
+  {
+    q: "ما معنى اعْبُدُوا اللَّهَ مَا لَكُمْ مِنْ إِلَهِ غَيْرُهُ؟",
+    a: "المعنى: أفردوا الله سبحانه وتعالى بالعبادة وحده، وخصّوه بها دون سواه؛ لأنه هو الإله الحق وحده، ولا معبود بحق في هذا الكون سواه[cite: 136, 137]."
+  },
+  {
+    q: "ما ذا يدل عليه قوله تعالى أَفَلَا تَتَّقُوْنَ ؟",
+    a: "يدل على أسلوب الاستعطاف والتحضيض البليغ من النبي هود عليه السلام لقومه؛ حثاً لهم على تحصيل التقوى ومراقبة الله[cite: 138, 139]."
+  },
+  {
+    q: "ما معنى قوله تعالى أَفَلَا تَتَّقُوْنَ ؟",
+    a: "المعنى المراد: أفلا تخافون عذاب الله الشديد وعقابه، فتبتعدوا وتنأوا بأنفسكم عن طريق الشرك والضلال المحتوم، لتنجوا من عذاب الله المحيط؟ [cite: 141, 142, 143]"
+  },
+  {
+    q: "بماذا رد قوم هود عليه السلام على دعوته ؟",
+    a: "ردوا عليه برد فاحش قبيح يطفح بالاستكبار والجهل، حيث قالوا: «إِنَّا لَنَرَاكَ فِي سَفَاهَةٍ وَإِنَّا لَنَظُنُّكَ مِنَ الْكَاذِبِينَ»[cite: 144, 145]."
+  },
+  {
+    q: "لماذا وصف الْمَلَأُ بِالَّذِينَ كَفَرُوْا دون الملأ من قوم نوح ؟",
+    a: "وصفوا بذلك لدقة وبلاغة التقسيم؛ لأن في أشراف وأسياد قوم هود عليه السلام من آمن واستجاب للدعوة (مثل: مرثد بن سعد)، بينما لم يكن في أشراف وأكابر قوم نوح عليه السلام فرد واحد آمن به[cite: 146, 148, 149]."
+  },
+  {
+    q: "ماذا يدل عليه قوله تعالى قَالَ الْمَلَأُ الَّذِيْنَ كَفَرُوا في قصة هود عليه السلام؟",
+    a: "يدل دلالة واضحة على أعلى درجات بلاغة القرآن الكريم، وإنصافه التام والعدالة المطلقة في إطلاق أحكامه على الخلق دون تعميم جائر[cite: 150, 151]."
+  },
+  {
+    q: "لماذا تشابهت أقوال قوم هود وأقوال قوم نوح في تكذيب الرسول ؟",
+    a: "يعود هذا التشابه إلى أن ضلالة المكذبين عبر العصور متحدة، والشبهات التي يثيرونها ضد الأنبياء متشابهة؛ تخرج من مشكاة عناد واحدة، كما قرر القران الكريم في قوله: «تَشَابَهَتْ قُلُوْبُهُمْ»[cite: 152, 153, 154]."
+  },
+  {
+    q: "ماذا كان رد هود عليه السلام على الملأ الذين كفروا ؟",
+    a: "رد عليهم متسامياً ومبراً نفسه بأدب النبوة قاصداً الهداية:\n«يَا قَوْمِ لَيْسَ بِي سَفَاهَةٌ وَلَكِنِّي رَسُوْلٌ مِنْ رَبِّ الْعَالَمِينَ * أُبَلِّغُكُمْ رِسَالَاتِ رَبِّي وَأَنَا لَكُمْ نَاصِحٌ أَمِينٌ»[cite: 155, 156, 157]."
+  },
+  {
+    q: "كيف إجابة الأنبياء على من نسبهم إلى الضلالة والسفاهة؟",
+    a: "تكون إجابتهم دائماً بالكلام الحكيم الصادر عن الحلم الشديد، والإغضاء عن الإساءة الشخصية، وترفعهم الكامل عن مقابلة السب بمثله، بالرغم من علمهم اليقيني بأن خصومهم هم أضل الناس وأسفهم عقولاً[cite: 159, 160, 161]."
+  },
+  {
+    q: "كيف يزيل هود عليه السلام تعجب قومه من اختصاص هود بالرسالة ؟",
+    a: "أزال تعجبهم بتذكيرهم بسنن الله وبنعمه العظمى عليهم قائلاً:\n«أَوَعَجِبْتُمْ أَنْ جَاءَكُمْ ذِكْرٌ مِنْ رَبِّكُمْ عَلَى رَجُلٍ مِنْكُمْ لِيُنْذِرَكُمْ وَاذْكُرُوا إِذْ جَعَلَكُمْ خُلَفَاءَ مِنْ بَعْدِ قومِ نُوحٍ وَزَادَكُمْ فِي الْخَلْقِ بَسْطَةً فَاذْكُرُوا آلَاءَ اللَّهِ لَعَلَّكُمْ تُفْلِحُوْنَ»[cite: 162, 163, 164]."
+  },
+  {
+    q: "ما المقصود بالخلفاء ؟",
+    a: "الخليفة هو كل من يخلف غيره، ويقوم مقامه في عمارة الأرض أو التمكين في شيء ما بعد ذهاب الأولين[cite: 165, 166]."
+  },
+  {
+    q: "ما معنى فاذكروا آلَاءَ اللَّهِ لَعَلَّكُمْ تُفْلِحُوْنَ؟",
+    a: "المعنى: اشكروا نعم الله الجليلة المتتابعة عليكم بطاعته وإفراده بالعبادة، لعلكم تفوزون وتسعدون بما أعده الله للشاكرين من إدامة هذه النعم وزيادتها ونيل رضا العلي القدير[cite: 167, 168, 169]."
+  },
+  {
+    q: "ماذا يدل عليه قوله تعالى : وَإِذْ قَالُوْا اللَّهُمَّ إِنْ كَانَ هَذَا هُوَ الْحَقَّ مِنْ عِنْدِكَ فَأَمْطِرْ عَلَيْنَا حِجَارَةً مِنَ السَّمَاءِ؟",
+    a: "يدل دلالة قاطعة على الجهل الذريع، والعمى المتأصل في نفوسهم؛ حيث إنهم بلغوا من الغرور مبلغه حتى أَمِنوا مكر الله وعقابه، وبدلاً من طلب الهداية استعجلوا الهلاك[cite: 170, 172, 173]."
+  },
+  {
+    q: "ما المقصود بالرجس في قوله تعالى : قَالَ قَدْ وَقَعَ عَلَيْكُمْ مِنْ رَبِّكُمْ رِجْزٌ وَغَضَبٌ ؟",
+    a: "الرجس أو الرجز هنا يراد به: العقاب الإلهي المحتوم، والعذاب الشديد المستحق جزاءً وفاقاً على عملهم القبيح وعنادهم المستمر[cite: 175, 176]."
+  },
+  {
+    q: "ما معنى فَانْتَظِرُوا إِنِّي مَعَكُمْ مِنَ الْمُنْتَظِرِينَ في قصة هود عليه السلام مع قومه؟",
+    a: "المعنى: فانتظروا حلول ونزول العذاب الذي استعجلتموه بجهلكم وطلبتموه بصلفكم حين قلتم: (فَأْتِنَا بِمَا تَعِدُنَا إِنْ كُنْتَ مِنَ الصَّادِقِينَ)، فإني معكم من المنتظرين لما سيحل ويقع عليكم من بأس وعقاب بسبب شرككم العظيم وتكذيبكم لنبيكم[cite: 177, 178, 179]."
+  },
+  {
+    q: "اذكر صفة إهلاك قوم هود عليه السلام من خلال القرآن الكريم ؟",
+    a: "أهلكهم الله تعالى بريح مدمرة وصفها في كتابه الكريم بقوله:\n«وَأَمَّا عَادٌ فَأُهْلِكُوا بِرِيْحٍ صَرْصَرٍ عَاتِيَةٍ * سَخَّرَهَا عَلَيْهِمْ سَبْعَ لَيَالٍ وَثَمَانِيَةَ أَيَّامٍ حُسُوْمًا فَتَرَى الْقَوْمَ فِيْهَا صَرْعَى كَأَنَّهُمْ أَعْجَازُ نَخْلٍ خَاوِيَةٍ»[cite: 180, 181]."
+  },
+  {
+    q: "اذكر العبر المستفادة من قصة هود عليه السلام مع قومه ؟",
+    a: "من أبرز العبر والدروس المستفادة:\n- وجوب ترك مقابلة الشر بمثله، والتمسك باستعمال اللين والتلطف في الخطاب الدعوي كما فعل هود مع قومه [cite: 183].\n- التلطف بتذكير المدعوين بنعم الله الوافرة عليهم ترغيباً لهم في الإيمان [cite: 184].\n- ضرورة اتصاف المصلح والموجه بسعة الصدر والحلم، وعدم مقابلة الإساءة بمثلها رجاء ظفره بهدايتهم [cite: 185, 186].\n- اليقين بأن نصر الله وتأييده التام حليفان دائماً لرسله وأوليائه الصالحين [cite: 187].\n- طبيعة أصحاب الجاه والسلطان الدنيوي الزائف في التكبر عن اتباع الرسل البشريين [cite: 188].\n- حتمية الهلاك وسوء المصير الدنيوي والأخروي للمتكبرين العاصين، وتحقق العاقبة الطيبة والنجاة للذين انقادوا للحق[cite: 190, 191]."
+  },
+  {
+    q: "اكتب مذكرة تعريفية عن نبي الله صالح عليه السلام ؟",
+    a: "هو نبي الله صالح عليه السلام، وهو: صالح بن عبيد بن حاذر بن ثمود، وينتهي نسبه الشريف إلى نبي الله نوح عليه السلام[cite: 195, 196]."
+  },
+  {
+    q: "كيف عبادة قبيلة ثمود قبل نبي الله صالح عند الأستاذ عبد الوهاب النجار ؟",
+    a: "يوضح الأستاذ عبد الوهاب النجار أن قبيلة ثمود قبل بعثة صالح كانت غارقة في الوثنية؛ حيث كانوا يدينون بعبادة الأصنام ويشركونها مع الله تعالى في العبادة[cite: 197, 198]."
+  },
+  {
+    q: "ما معنى قوله تعالى : وَإِلَى ثَمُوْدَ أَخَاهُمْ صَالِحًا؟",
+    a: "المعنى: وأرسلنا إلى قبيلة ثمود أخاهم في النسب والموطن والمنشأ صالحاً عليه الصلاة والسلام[cite: 199, 200]."
+  },
+  {
+    q: "ما معنى قوله تعالى : قَدْ جَاءَتْكُمْ بَيِّنَةٌ مِنْ رَبِّكُمْ في قصة صالح عليه السلام مع قومه؟",
+    a: "المعنى: قد جاءتكم معجزة عظمى، ظاهرة الدلائل وواضحة البراهين، تشهد شهادة قاطعة بنبوتي وصدقي التام فيما أبلغه عن ربي سبحانه[cite: 201, 203]."
+  },
+  {
+    q: "لماذا ورد تنكير الآية في قوله تعالى قَدْ جَاءَتْكُمْ بَيِّنَةٌ مِنْ رَبِّكُمْ ؟",
+    a: "وردت كلمة (بَيِّنَةٌ) بالرواية التنكيرية لإفادة التعظيم البليغ والتفخيم لشأن هذه المعجزة ومكانتها[cite: 204, 205]."
+  },
+  {
+    q: "ما الحكمة في ذكر لفظ ( مِنْ رَبِّكُمْ) في قوله تعالى : قَدْ جَاءَتْكُمْ بَيِّنَةٌ مِنْ رَبِّكُمْ؟",
+    a: "الحكمة من ذلك هي الإعلام والبيان القاطع بأن هذه المعجزة الباهرة ليست من فعل صالح عليه السلام، ولا مما تناله قدرة البشر أو كسبهم، بل هي محض خلق الله الخارق للعادة كشأن سائر معجزات الأنبياء[cite: 206, 207, 208]."
+  },
+  {
+    q: "ما معنى قوله تعالى : هَذِهِ نَاقَةُ اللهِ لَكُمْ آيَةً في قصة صالح عليه السلام مع قومه؟",
+    a: "المعنى: هذه الناقة التي خلقها الله وأوجدها من غير طريق التناسل المعتاد؛ جعلها الله سبحانه حجة وعلامة فارقة شاهدة على صدق رسالتي إليكم[cite: 209, 211]."
+  },
+  {
+    q: "لماذا تسمّى نَاقَةُ اللهِ إضافة تخصيص وتعظيم ؟",
+    a: "أضيفت الناقة إلى الله تعالى إضافة تشريف وتخصيص لعلتين:\n١. لأنها خُلقت مباشرة بتكوينه تعالى وإرادته الخارقة دون سبب بشري[cite: 213, 214].\n٢. لأنها جعلت بمثابة حجة واختبار لقوم صالح؛ إن حفظوها وأكرموها كُتبت لهم النجاة، وإن غدروا بها استحقوا الهلاك والدمار الشامل[cite: 214, 215]."
+  },
+  {
+    q: "كيف رأي الإمام القاضي عن وجه كون الناقة آية / معجزة ؟",
+    a: "يرى الإمام القاضي أن إعجاز الناقة يتجلى في ثلاثة أوجه مذهلة:\n- خروجها وانشقاقها من جوف الجبل الصخري الأصم [cite: 216, 218].\n- كونها خلقت ولدت كمعجزة مستقلة لا من تزاوج ذكر وأنثى [cite: 219].\n- كمال خلقها وضخامة بنيتها دفعة واحدة من غير تدرج في النمو المعتاد[cite: 220]."
+  },
+  {
+    q: "ما معنى قوله تعالى : فَذَرُوهَا تَأْكُلْ فِي أَرْضِ اللَّهِ ؟",
+    a: "المعنى: بما أنها آية مقدسة من آيات الله الخالقة، فيجب عليكم إكرامها وتركها وشأنها دون التعرض لها بسوء؛ فكأنه يقرر حقيقة عقلية: الأرض هي أرض الله، والناقة هي ناقة الله، فلا تضيقوا عليها في ملك خالقها[cite: 221, 222, 223]."
+  },
+  {
+    q: "ما معنى قوله تعالى : وَلَا تَمَسُّوْهَا بِسُوْءٍ فَيَأْخُذَكُمْ عَذَابٌ أَلِيمٌ ؟",
+    a: "المعنى: لا تضربوها، ولا تطردوها من مرعى، ولا تصيبوها بأي نوع من أنواع الأذى إكراماً لآية الله؛ فإن حدث منكم أدنى إيذاء، عاقبكم الله بعقاب عاجل أليم جزاء جرأتكم على آية الله الدالة على عظيم قدرته وجلاله[cite: 224, 226, 227, 228]."
+  },
+  {
+    q: "ماذا يدل عليه قوله تعالى : وَلَا تَمَسُّوْهَا بِسُوْءٍ ؟",
+    a: "يدل على قاعدة بلاغية وهي: التنبيه بالأدنى على الأعلى؛ فإذا كان مجرد المساس الخفيف بالأذى منهياً عنه وموجباً للعذاب، فكيف بعقرها وقتلها؟ [cite: 229, 230]"
+  },
+  {
+    q: "كيف رأي الإمام الضحاك عن عمر الواحد من قوم صالح عليه السلام ؟",
+    a: "ذكر الإمام الضحاك أن أعمارهم كانت طويلة جداً؛ حيث كان الفرد من قوم صالح (وكذلك قوم هود) يعيش ما بين ثلاثمائة (٣٠٠) سنة إلى ألف (١٠٠٠) سنة[cite: 232, 233]."
+  },
+  {
+    q: "ما المقصود من قوله تعالى : وَلَا تَعْثَوْا فِي الْأَرْضِ مُفْسِدِينَ؟",
+    a: "النهي الشديد والزجر عما كانوا غارقين فيه من التمادي في الفساد العريض، وعبادة غير الله تعالى، والاستكبار، والعناد، والإعراض عن طاعة الرسل[cite: 234, 235, 236]."
+  },
+  {
+    q: "اذكر موقف قوم صالح عليه السلام من دعوته من خلال سورة الأعراف ؟",
+    a: "يصور القرآن موقفهم وجدالهم الاستكباري في قوله تعالى:\n«قَالَ الْمَلَأُ الَّذِينَ اسْتَكْبَرُوا مِنْ قَوْمِهِ لِلَّذِينَ اسْتُضْعِفُوا لِمَنْ آمَنَ مِنْهُمْ أَتَعْلَمُوْنَ أَنَّ صَالِحًا مُرْسَلٌ مِنْ رَبِّهِ قَالُوْا إِنَّا بِمَا أُرْسِلَ بِهِ مُؤْمِنُوْنَ * قَالَ الَّذِينَ اسْتَكْبَرُوا إِنَّا بِالَّذِي آمَنْتُمْ بِهِ كَافِرُوْنَ * فَعَقَرُوا النَّاقَةَ وَعَتَوْا عَنْ أَمْرِ رَبِّهِمْ وَقَالُوْا يَا صَالِحُ ائْتِنَا بِمَا تَعِدُنَا إِنْ كُنْتَ مِنَ الْمُرْسَلِينَ»[cite: 237, 238]."
+  },
+  {
+    q: "لماذا أن يسبق الفقراء المستضعفون من الناس إلى إجابة دعوة الرسل وأتباعهم وإلى دعوة كل إصلاح، ولماذا أن يكفر بهم أكابر القوم المجرمين والأغنياء المترفون ؟",
+    a: "السبب وراء هذا التمايز الاجتماعي في قبول الدعوة يعود إلى:\n- الفقراء المستضعفون: يسهل عليهم قبول الحق لأنه لا يثقل على نفوسهم ولا يضيرهم كبرياؤهم أن يكونوا أتباعاً لغيرهم في الحق[cite: 239, 243].\n- أكابر القوم والأغنياء المترفون: يمنعهم كبرهم وحرصهم على الرياسة؛ إذ يشق ويصعب على نفوسهم المترفة أن يصيروا مرؤوسين ومستوين مع عامة الناس[cite: 240, 241, 244, 245]."
+  },
+  {
+    q: "بماذا كان رد المؤمنين على هؤلاء المستكبرين عن بعثة سيدنا صالح عليه السلام ؟",
+    a: "رد المؤمنون بلسان الواثق بالله عز وجل، اللاجئ إلى حماه وجنابه سبحانه، فقالوا بيقين تام كما حكى القرآن: «إِنَّا بِمَا أُرْسِلَ بِهِ مُؤْمِنُوْنَ»[cite: 247, 248, 249, 250]."
+  },
+  {
+    q: "ماذا يدل عليه رد المؤمنين على هؤلاء المستكبرين ؟",
+    a: "يدل على شجاعتهم الفائقة في الجهر بالحق أمام الطغاة، وعلى قوة إيمانهم الراسخ، وسلامة يقينهم الذي لا يتزعزع[cite: 251, 253]."
+  },
+  {
+    q: "لماذا المؤمنون تركوا عن الجواب الموافق لسؤال هؤلاء المستكبرين ؟",
+    a: "تركوا الجواب التقليدي (نعم نعلم) وعدلوا عنه إلى إعلان الإيمان؛ مسارعةً منهم إلى تحقيق الحق وإثباته، وإظهاراً لما تفيض به صدورهم من الإيمان الثابت المستمر المتجاوز لمجرد العلم البشري[cite: 254, 255]."
+  },
+  {
+    q: "لماذا هؤلاء المستكبرون لم يقولوا : إِنَّا بِمَا أُرْسِلَ بِهِ كَافِرُوْنَ؟",
+    a: "عدل المستكبرون عن هذه الصيغة لسببين دقيقين:\n١. إمعاناً في إظهار المخالفة التامة للمؤمنين ورداً مباشراً على مقالتهم وتحدياً لها[cite: 256, 258].\n٢. حذراً وتحرزاً مما قد يوهمه ظاهر اللفظ من إثباتهم لرسالة صالح (أنه أُرسل بشيء) وهم في الأصل يجحدون وينكرون أصل رسالته من الأساس[cite: 259, 260]."
+  },
+  {
+    q: "ما السر في إسناد الله تعالى العقر إلى جميع المستكبرين ؟",
+    a: "أسند الله تعالى فعل العقر إلى صيغة الجمع (فعقروا) لأن الجريمة كانت بملئ رضاهم، وتواطئهم، وتشجيعهم، بالرغم من أن الذي باشر الجريمة بيده إنما هو بعضهم (فرد واحد باشر وعقر برضا المجموع)[cite: 261, 263, 264]."
+  },
+  {
+    q: "اذكر العبر المستفادة من قصة صالح عليه السلام مع قومه ؟",
+    a: "من أسمى العبر والدروس في قصة صالح وثمود:\n- حبا الله قوم صالح نعماً وافرة عظيمة وخيرات واسعة [cite: 265, 266].\n- كفر قوم صالح بموجد النعم ومنعمها، وعصوا رسولهم واستكبروا[cite: 267].\n- إن الله يملي ويؤخر ولا يهمل؛ فقد أخّر الله عنهم العذاب لحكمة ثم أخذهم بغتة [cite: 269].\n- المؤمنون دائماً يعيشون في سعادة حقيقية وأمن وطمأنينة، قلوبهم شاكرة، وألسنتهم ذاكرة لله في البأساء والضراء، ونصر الله محقق لهم في النهاية [cite: 270, 271].\n- واجب الدعاة والمصلحين الصبر الطويل، وتحمل صلف المدعوين وجهلهم [cite: 272].\n- الزعماء وأصحاب الصولة والجاه الدنيوي الزائف هم في الغالب أول أعداء الرسل والمصلحين[cite: 272]."
+  },
+  {
+    q: "ما الفرق بين الكهف والغار ؟",
+    a: "الكهف: الشق الواسع في الجبل.\nالغار: لم يكن الشق واسعاً (يكون ضيقاً صغيراً)."
+  },
+  {
+    q: "اذكر أقوال العلماء في معنى الرقيم ؟",
+    a: "في معنى الرقيم ستة أقوال لأهل العلم والتفسير:\nالقول الأول: أنه لوح، أو صخرة، أو كتاب كانت فيه أسماء الفتية مكتوبة.\nالقول الثاني: أنه اسم القرية التي خرجوا منها.\nالقول الثالث: اسم الجبل.\nالقول الرابع: أنه الدواة (الحبر) بلسان الروم.\nالقول الخامس: اسم الكلب.\nالقول السادس: اسم الوادي الذي فيه الكهف."
+  },
+  {
+    q: "هل أصحاب الكهف والرقيم طائفة واحدة ؟",
+    a: "نعم، هم طائفة واحدة على الصحيح، ولكن بعض المفسرين يقول: أنهم طائفتان، وأن أصحاب الرقيم هم الثلاثة الذين آواهم المبيت إلى مغارة فانحدرت صخرة عليهم (المذكورون في حديث الغار الشهير)."
+  },
+  {
+    q: "لماذا القرآن الكريم لم يبين لنا مكان أو زمان أصحاب الكهف؟",
+    a: "لأن العلم بذلك لا ينفع في الدين والعمل، والجهل به لا يضر؛ إذ العبرة بالقصة تكمن في موعظتها ودلالتها الإيمانية لا في تفاصيلها الجغرافية أو التاريخية."
+  },
+  {
+    q: "ما معنى قوله تعالى : أَوَى الْفِتْيَةُ إِلَى الْكَهْفِ ؟ وما الملمح في وصفهم بالفتية؟",
+    a: "معناه: صاروا إلى الكهف وجعلوه مأوى لهم ومنزلاً نزلوا فيه لحماية دينهم.\nوالفتية هم الشباب؛ والملمح في ذلك أن الشباب هم أقبل للحق وألين قلوباً وأسرع استجابة له من الشيوخ الذين عتوا في كفرهم وجمدوا على تقاليدهم."
+  },
+  {
+    q: "ما سبب هروب أصحاب الكهف إلى الكهف ؟",
+    a: "أنهم كانوا مسلمين على دين عيسى عليه السلام، وكان لهم ملك عابد وثن (دقيانوس)، دعاهم إلى عبادة الأصنام والشرك بالله، فهربوا بدينهم منه خشية أن يفتنهم عن الإيمان، أو يقتلهم، فاستخفوا واختبؤوا منه في الكهف."
+  },
+  {
+    q: "أي الدعاء الذي قاله أصحاب الكهف عندما دخلوا الكهف ؟",
+    a: "هو قوله تعالى: {رَبَّنَا آتِنَا مِنْ لَدُنْكَ رَحْمَةً وَهَيِّئْ لَنَا مِنْ أَمْرِنَا رَشَدًا}."
+  },
+  {
+    q: "ما الحكمة بزيادة لفظ ( مِنْ لَدُنْكَ ) في دعاء أصحاب الكهف ؟",
+    a: "لأن في (مِنْ) معنى الابتداء، وفي (لَدُنْ) معنى العندية والقرب الخاص.\nوالحكمة في ذلك: أن الخلق كلهم بمحل الرحمة العامة من الله، ولكن الفتية سألوا رحمة خاصة وافرة ومباشرة من خزائن فضل الله تناسب حال شدّتهم وانقطاعهم عن الأسباب."
+  },
+  {
+    q: "ماذا يدل عليه دعاء أصحاب الكهف؟",
+    a: "يدل على أهمية الدعاء، والتبرؤ من الحول والقوة، والتذلل والافتقار إلى الله تعالى، والاعتماد عليه وحده عند انقطاع الأسباب المادية."
+  },
+  {
+    q: "لماذا أنام الله أصحاب الكهف في الكهف سنين عددا ؟",
+    a: "كرامة لهم من الله عز وجل، وطمأنينة لقلوبهم وحفظاً لهم من بطش الملك وجنوده؛ فالخائف لا ينام ولا يهدأ، فأنزل الله عليهم النوم ليزول روعهم وتحصل لهم السكينة."
+  },
+  {
+    q: "اذكر قدر نوم أصحاب الكهف من خلال القرآن الكريم ؟",
+    a: "قدر نومهم كما جاء في نص القرآن الكريم: ثلاث مائة سنة شمسية، وازدادوا تسع سنين بالتقدير القمري، كما في قوله تعالى: {وَلَبِثُوا فِي كَهْفِمْ ثَلَاثَ مَائَةٍ سِنِينَ وَازْدَادُوا تِسْعًا}."
+  }
+];
+    const i18n = {
+        id: { subtitle: "Latih Memori & Murojaah Mandiri", btnStart: "Mulai Latihan Acak", btnReveal: "Buka Jawaban", lAns: "Kunci Jawaban:", btnWrong: "Belum Hafal", btnCorrect: "Sudah Hafal", resTitle: "Hasil Evaluasi", btnRestart: "Kembali ke Menu Utama", countMsg: (n) => `${n} Soal siap diujikan.`, tOn: "Aktifkan Timer", tSec: "Durasi (detik):", fixedLabel: "Materi Kuliah:" },
+        ar: { subtitle: " منصة تدريب الذاكرة والمراجعة", btnStart: "ابدأ التدريب", btnReveal: "إظهار الإجابة", lAns: "الإجابة الشارحة:", btnWrong: "نسيت", btnCorrect: "حفظت", resTitle: "النتيجة النهائية", btnRestart: "العودة للقائمة", countMsg: (n) => `جاهز لـ ${n} من الأسئلة المقررة.`, tOn: "تفعيل المؤقت", tSec: "المدة (ثانية):", fixedLabel: "المادة :" },
+        en: { subtitle: "Memory Training & Self-Murojaah", btnStart: "Start Random Practice", btnReveal: "Show Answer", lAns: "Explanation Answer:", btnWrong: "Forgot", btnCorrect: "Memorized", resTitle: "Final Result", btnRestart: "Back to Menu", countMsg: (n) => `${n} exam questions ready to test.`, tOn: "Enable Timer", tSec: "Duration (sec):", fixedLabel: "Current Subject:" }
+    };
+
+    function toggleLangMenu() {
+        document.getElementById("langDropdown").classList.toggle("show");
+    }
+
+    function changeLang(lang) {
+        setLang(lang);
+        document.getElementById("current-lang-btn").innerText = "🌐 " + lang.toUpperCase();
+        document.getElementById("langDropdown").classList.remove("show");
+    }
+
+    window.addEventListener('click', function(event) {
+        if (!event.target.matches('.dropbtn')) {
+            const dropdowns = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < dropdowns.length; i++) {
+                const openDropdown = dropdowns[i];
+                if (openDropdown.classList.contains('show')) {
+                    openDropdown.classList.remove('show');
+                }
+            }
+        }
+    });
+
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('thoriqDarkMode', isDark);
+        document.getElementById('dark-toggle').innerText = isDark ? '☀️' : '🌙';
+    }
+
+    function setLang(lang) {
+        document.body.setAttribute('lang', lang);
+        const t = i18n[lang];
+        document.getElementById('txt-subtitle').innerText = t.subtitle;
+        document.getElementById('txt-fixed-label').innerText = t.fixedLabel;
+        document.getElementById('start-btn').innerText = t.btnStart;
+        document.getElementById('reveal-btn').innerText = t.btnReveal;
+        document.getElementById('txt-label-ans').innerText = t.lAns;
+        document.getElementById('txt-btn-wrong').innerText = t.btnWrong;
+        document.getElementById('txt-btn-correct').innerText = t.btnCorrect;
+        document.getElementById('txt-res-title').innerText = t.resTitle;
+        document.getElementById('txt-btn-restart').innerText = t.btnRestart;
+        document.getElementById('txt-timer-on').innerText = t.tOn;
+        document.getElementById('txt-timer-sec').innerText = t.tSec;
+        
+        document.getElementById('count-info').innerText = t.countMsg(DAFTAR_SOAL.length);
+    }
+
+    let currentQuestions = [], currentIdx = 0, score = 0, timerInterval;
+
+    function startTimer() {
+        const isTimerOn = document.getElementById('timer-toggle').checked;
+        const duration = parseInt(document.getElementById('timer-duration').value) || 30;
+        if (!isTimerOn) { document.getElementById('timer-container').style.display = 'none'; return; }
+
+        let timeLeft = duration;
+        document.getElementById('timer-container').style.display = 'block';
+        const bar = document.getElementById('timer-bar');
+        bar.style.transition = 'none'; bar.style.width = "100%"; bar.style.background = "var(--accent)";
+        setTimeout(() => { bar.style.transition = 'width 1s linear'; }, 50);
+
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            timeLeft--;
+            const width = (timeLeft / duration) * 100;
+            bar.style.width = width + "%";
+            if (timeLeft <= 5) bar.style.background = "#e74c3c";
+            if (timeLeft <= 0) { clearInterval(timerInterval); revealAnswer(); }
+        }, 1000);
+    }
+
+    function startQuiz() {
+        currentQuestions = [...DAFTAR_SOAL].sort(() => Math.random() - 0.5);
+        currentIdx = 0; score = 0;
+        document.getElementById('setup-section').style.display = 'none';
+        document.getElementById('quiz-section').style.display = 'block';
+        showQuestion();
+    }
+
+    function showQuestion() {
+        const data = currentQuestions[currentIdx];
+        document.getElementById('progress').innerText = `${currentIdx + 1} / ${currentQuestions.length}`;
+        document.getElementById('q-text').innerText = data.q;
+        document.getElementById('a-text').innerText = data.a;
+        document.getElementById('answer-container').style.display = 'none';
+        document.getElementById('eval-section').style.display = 'none';
+        document.getElementById('reveal-btn').style.display = 'block';
+        startTimer();
+    }
+
+    function revealAnswer() {
+        clearInterval(timerInterval);
+        document.getElementById('answer-container').style.display = 'block';
+        document.getElementById('eval-section').style.display = 'grid';
+        document.getElementById('reveal-btn').style.display = 'none';
+    }
+
+    function processResult(isCorrect) {
+        if(isCorrect) score++;
+        currentIdx++;
+        if(currentIdx < currentQuestions.length) showQuestion();
+        else {
+            document.getElementById('quiz-section').style.display = 'none';
+            document.getElementById('result-section').style.display = 'block';
+            document.getElementById('score-text').innerText = `${score} / ${currentQuestions.length}`;
+        }
+    }
+
+    window.onload = () => {
+        if (localStorage.getItem('thoriqDarkMode') === 'true') {
+            document.body.classList.add('dark-mode');
+            document.getElementById('dark-toggle').innerText = '☀️';
+        }
+        document.getElementById('display-maddah-name').innerText = NAMA_MADDAH;
+        setLang('ar');
+    };
+
+</script>
+</body>
+</html>
